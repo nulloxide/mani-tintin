@@ -1288,3 +1288,226 @@ body.touch .radio {
     transition: none !important;
   }
 }
+
+.adventure-preview {
+  color: #ffdb8d;
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 10px 0 0;
+}
+.training {
+  display: flex;
+  gap: 5px;
+  margin-top: 10px;
+  font-size: 9px;
+  font-weight: 800;
+}
+.training span {
+  padding: 5px 6px;
+  border: 1px solid #bdab8b;
+  border-radius: 3px;
+}
+.training .done {
+  background: #d5e6c5;
+  color: #2e5d45;
+  border-color: #6b8b68;
+}
+.readings {
+  top: 310px;
+}
+.games-button {
+  position: fixed;
+  right: 32px;
+  top: 312px;
+  padding: 12px 14px;
+  color: var(--ink);
+  background: var(--gold);
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1.3;
+  pointer-events: auto;
+  min-height: 44px;
+  cursor: pointer;
+}
+.challenge-status {
+  position: fixed;
+  top: 158px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(330px, 30vw);
+  text-align: center;
+  padding: 10px 12px;
+  font-size: 11px;
+  font-weight: 800;
+  background: #c8e1da;
+  pointer-events: none;
+}
+.skip-intro {
+  display: block;
+  margin: 12px auto 0;
+  border: 0;
+  padding: 8px 10px;
+  color: var(--ink);
+  background: transparent;
+  text-decoration: underline;
+  cursor: pointer;
+  min-height: 44px;
+  font: inherit;
+  font-size: 10px;
+}
+.games-modal {
+  width: min(570px, 100%);
+}
+.game-choices {
+  display: grid;
+  gap: 9px;
+  margin: 18px 0 8px;
+}
+.game-choice {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-align: left;
+  padding: 14px;
+  border: 2px solid var(--ink);
+  border-radius: 4px;
+  color: var(--ink);
+  background: #fff7e4;
+  cursor: pointer;
+}
+.game-choice:hover:not(:disabled),
+.game-choice:focus-visible {
+  background: #ffe09a;
+  transform: translateY(-2px);
+}
+.game-choice:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+.game-symbol {
+  font-size: 34px;
+  width: 42px;
+  text-align: center;
+  flex-shrink: 0;
+}
+.game-choice b {
+  display: block;
+  font-size: 16px;
+}
+.game-choice small {
+  display: block;
+  font-size: 11px;
+  line-height: 1.5;
+  margin: 5px 0;
+}
+.game-choice .medal {
+  display: block;
+  color: #795017;
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 800;
+}
+.final-medals {
+  padding: 10px;
+  border: 1px dashed #95793b;
+  background: #ffe4a6;
+}
+.flying .games-button,
+.flying .challenge-status,
+.flying .training {
+  display: none;
+}
+@media (max-width: 900px) {
+  .games-button {
+    right: 24px;
+    top: 280px;
+    font-size: 11px;
+  }
+  .readings {
+    top: 310px;
+  }
+  .challenge-status {
+    top: auto;
+    bottom: 265px;
+    width: 320px;
+    max-width: calc(100% - 40px);
+  }
+}
+@media (max-width: 600px) {
+  .games-button {
+    right: 18px;
+    top: 221px;
+    padding: 8px;
+    font-size: 10px;
+    max-width: 106px;
+  }
+  .readings {
+    top: 291px;
+  }
+  .training {
+    font-size: 8px;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+  .training span {
+    padding: 4px;
+  }
+  .challenge-status {
+    bottom: 365px;
+    font-size: 10px;
+    padding: 8px;
+    width: 290px;
+  }
+  .game-choice {
+    padding: 10px;
+    gap: 10px;
+  }
+  .game-choice b {
+    font-size: 14px;
+  }
+  .game-symbol {
+    font-size: 26px;
+    width: 30px;
+  }
+  .adventure-preview {
+    font-size: 9px;
+  }
+}
+@media (max-height: 600px) and (min-width: 601px) {
+  .readings {
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    gap: 6px;
+  }
+  .readings .oxygen {
+    width: 90px;
+    padding: 5px 8px;
+  }
+  .readings .clock {
+    min-width: 42px;
+    font-size: 10px;
+  }
+  .games-button {
+    top: 205px;
+    left: 24px;
+    right: auto;
+    max-width: 235px;
+    min-height: 36px;
+    padding: 8px 12px;
+  }
+  .challenge-status {
+    top: 115px;
+    bottom: auto;
+    width: 220px;
+    max-width: 28vw;
+    font-size: 9px;
+  }
+  .training {
+    display: none;
+  }
+  .adventure-preview {
+    display: none;
+  }
+}

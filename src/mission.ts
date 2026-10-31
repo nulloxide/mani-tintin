@@ -58,6 +58,7 @@ export class Mission {
   impacts = 0;
   jumps = 0;
   launchStep = 0;
+  bonusPoints = 0;
   mode: Mode;
   constructor(mode: Mode) {
     this.mode = mode;
@@ -83,7 +84,8 @@ export class Mission {
     return true;
   }
   tick(delta: number, atBase = false) {
-    if (this.chapter !== "explore" || delta <= 0) return;
+    if (this.chapter !== "explore" || !Number.isFinite(delta) || delta <= 0)
+      return;
     this.elapsed += delta;
     if (atBase) this.oxygen = Math.min(100, this.oxygen + delta * 16);
     else if (this.mode === "expedition")
@@ -117,16 +119,21 @@ export class Mission {
     return (
       1 +
       Number(this.rescues === 0) +
-      Number(this.impacts === 0 && this.elapsed < 360)
+      Number(
+        this.impacts === 0 && (this.mode === "explorer" || this.elapsed < 360),
+      )
     );
   }
   get score() {
     return Math.max(
       0,
       this.samples.size * 200 +
+        this.bonusPoints +
         Number(this.snowy) * 500 +
         this.stars * 200 +
-        Math.max(0, 600 - Math.floor(this.elapsed)) -
+        (this.mode === "explorer"
+          ? 600
+          : Math.max(0, 600 - Math.floor(this.elapsed))) -
         this.rescues * 100 -
         this.impacts * 25,
     );

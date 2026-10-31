@@ -38,7 +38,9 @@ export class Input {
       if (e.pointerId === this.pointer) this.move(e);
     });
     for (const event of ["pointerup", "pointercancel", "lostpointercapture"])
-      this.stick.addEventListener(event, () => this.release());
+      this.stick.addEventListener(event, (e) => {
+        if ((e as PointerEvent).pointerId === this.pointer) this.release();
+      });
     document.querySelector("#jump")!.addEventListener("pointerdown", (e) => {
       e.preventDefault();
       this.jump = true;
@@ -61,7 +63,10 @@ export class Input {
     this.knob.style.transform = `translate(${this.x * range}px, ${-this.y * range}px)`;
   }
   private release() {
+    const pointer = this.pointer;
     this.pointer = null;
+    if (pointer !== null && this.stick.hasPointerCapture(pointer))
+      this.stick.releasePointerCapture(pointer);
     this.x = 0;
     this.y = 0;
     this.knob.style.transform = "";

@@ -79,6 +79,9 @@
         >
       </fieldset>
       <button id="start" class="primary" disabled>Preparing the rocket…</button>
+      <p class="adventure-preview">
+        Rescue the crew · Race the rover · Moon-jump hoops
+      </p>
       <p id="load-status" role="status">
         Packing sandwiches. Checking spacesuits.
       </p>
@@ -107,7 +110,17 @@
           <span id="sample-count">SAMPLES 0 / 5</span
           ><span id="snowy-status">SNOWY: EXPLORING</span>
         </div>
+        <div id="training" class="training" hidden></div>
       </div>
+      <button id="games" class="games-button comic-panel" hidden>
+        ★ Moon games 0/3
+      </button>
+      <div
+        id="challenge-status"
+        class="challenge-status comic-panel"
+        role="status"
+        hidden
+      ></div>
       <div class="readings">
         <div class="oxygen comic-panel">
           <span>O₂ <b id="oxygen-text">100%</b></span>
@@ -132,6 +145,9 @@
           <i class="safe-zone"></i><i id="orbit-cursor"></i>
         </div>
         <b id="tether-count">TETHER 0 / 3</b>
+        <button id="skip-intro" class="skip-intro" hidden>
+          Skip rescue · land on the Moon →
+        </button>
       </div>
       <div
         id="radio"
@@ -167,6 +183,59 @@
         <kbd>WASD</kbd> move <span>·</span> <kbd>SPACE</kbd> moon jump
         <span>·</span> <kbd>E</kbd> interact <span>·</span> drag to look
       </p>
+    </section>
+
+    <section id="games-panel" class="modal-backdrop" hidden>
+      <div
+        class="modal comic-panel games-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="games-title"
+        tabindex="-1"
+      >
+        <p class="chapter-label">COMMANDER MANI’S PLAYGROUND</p>
+        <h2 id="games-title">The Moon is yours.</h2>
+        <p>
+          A little adventure within the adventure. Earn a badge and 250 bonus
+          points for each game. Your samples stay safe.
+        </p>
+        <div class="game-choices">
+          <button data-game="rally" class="game-choice">
+            <span class="game-symbol">⚑</span
+            ><span
+              ><b>Mani Express Rally</b
+              ><small
+                >Board the rover. Cross START, then five gates in 60 seconds.
+                Follow the compass!</small
+              ><em class="medal">Play this game →</em></span
+            >
+          </button>
+          <button data-game="hoops" class="game-choice">
+            <span class="game-symbol">◎</span
+            ><span
+              ><b>Moon-jump Champion</b
+              ><small
+                >Three golden hoops. Jump through them on foot, in order. No
+                timer, just giant leaps.</small
+              ><em class="medal">Play this game →</em></span
+            >
+          </button>
+          <button data-game="fetch" class="game-choice">
+            <span class="game-symbol">♡</span
+            ><span
+              ><b>Snowy’s Best Friend</b
+              ><small
+                >Throw three Moon biscuits and watch Snowy fetch them. Rescue
+                him first!</small
+              ><em class="medal">Rescue Snowy to unlock</em></span
+            >
+          </button>
+        </div>
+        <button id="close-games" class="primary">Back to the Moon →</button>
+        <button id="cancel-game" class="secondary" hidden>
+          End this game · keep exploring
+        </button>
+      </div>
     </section>
 
     <section id="pause-panel" class="modal-backdrop" hidden>
@@ -246,6 +315,7 @@
           <div><b id="final-time"></b><span>ON THE MOON</span></div>
         </div>
         <p id="award" class="award"></p>
+        <p id="final-medals" class="final-medals"></p>
         <blockquote>
           “Commander Mani, excellent work! Next time, can we visit somewhere
           with a decent sandwich?”<cite>— Captain Haddock</cite>

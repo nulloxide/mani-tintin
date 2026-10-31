@@ -1,5 +1,5 @@
 import { Scene } from "@babylonjs/core/scene";
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
@@ -55,7 +55,7 @@ export function createWorkshop(scene: Scene) {
     if (outlined) {
       mesh.renderOutline = true;
       mesh.outlineColor = ink;
-      mesh.outlineWidth = 0.025;
+      mesh.outlineWidth = 0.016;
     }
     return mesh;
   }
@@ -167,14 +167,119 @@ export function createWorkshop(scene: Scene) {
     );
     return mesh;
   }
+  function bevelBox(
+    name: string,
+    parent: TransformNode | null,
+    mat: StandardMaterial,
+    pos: number[],
+    size: number[],
+    bevel = 0.08,
+  ) {
+    const [w, h, d] = size.map((v) => v / 2);
+    const b = Math.min(bevel, w * 0.4, h * 0.6, d * 0.4);
+    const vertices: number[] = [],
+      indices: number[] = [];
+    for (const [y, inset] of [
+      [-h, b],
+      [-h + b, 0],
+      [h - b, 0],
+      [h, b],
+    ]) {
+      const x = w - inset,
+        z = d - inset,
+        r = b;
+      for (const [px, pz] of [
+        [-x + r, -z],
+        [x - r, -z],
+        [x, -z + r],
+        [x, z - r],
+        [x - r, z],
+        [-x + r, z],
+        [-x, z - r],
+        [-x, -z + r],
+      ])
+        vertices.push(px, y, pz);
+    }
+    for (let row = 0; row < 3; row++)
+      for (let i = 0; i < 8; i++) {
+        const a = row * 8 + i,
+          b = row * 8 + ((i + 1) % 8);
+        indices.push(a, a + 8, b, b, a + 8, b + 8);
+      }
+    for (let i = 1; i < 7; i++)
+      indices.push(0, i, i + 1, 24, 24 + i + 1, 24 + i);
+    for (let i = 0; i < indices.length; i += 3)
+      [indices[i + 1], indices[i + 2]] = [indices[i + 2], indices[i + 1]];
+    const data = new VertexData();
+    data.positions = vertices;
+    data.indices = indices;
+    const normals: number[] = [];
+    VertexData.ComputeNormals(vertices, indices, normals);
+    data.normals = normals;
+    const mesh = finish(new Mesh(name, scene), parent, mat);
+    data.applyToMesh(mesh);
+    mesh.position.set(pos[0], pos[1], pos[2]);
+    return mesh;
+  }
+  function swept(
+    name: string,
+    parent: TransformNode,
+    mat: StandardMaterial,
+    rings: { x: number; y: number; z: number; radius: number; depth: number }[],
+  ) {
+    const positions: number[] = [],
+      indices: number[] = [],
+      steps = 16;
+    for (const ring of rings)
+      for (let i = 0; i <= steps; i++) {
+        const a = (i / steps) * Math.PI * 2;
+        positions.push(
+          ring.x + Math.cos(a) * ring.radius,
+          ring.y,
+          ring.z + Math.sin(a) * ring.depth,
+        );
+      }
+    for (let j = 0; j < rings.length - 1; j++)
+      for (let i = 0; i < steps; i++) {
+        const a = j * (steps + 1) + i,
+          b = a + steps + 1;
+        indices.push(a, b, a + 1, a + 1, b, b + 1);
+      }
+    for (let i = 0; i < indices.length; i += 3)
+      [indices[i + 1], indices[i + 2]] = [indices[i + 2], indices[i + 1]];
+    const data = new VertexData(),
+      normals: number[] = [];
+    data.positions = positions;
+    data.indices = indices;
+    VertexData.ComputeNormals(positions, indices, normals);
+    data.normals = normals;
+    const mesh = finish(new Mesh(name, scene), parent, mat);
+    data.applyToMesh(mesh);
+    return mesh;
+  }
   function astronaut(name: string, captain = false) {
     const root = new TransformNode(name, scene);
-    sphere("suit body", root, palette.orange, [0, 1.14, 0], [0.84, 0.96, 0.62]);
+    swept("tailored pressure suit", root, palette.orange, [
+      { x: 0, y: 0.77, z: 0, radius: 0.25, depth: 0.23 },
+      { x: 0, y: 0.87, z: 0, radius: 0.34, depth: 0.28 },
+      { x: 0, y: 1.12, z: 0, radius: 0.37, depth: 0.3 },
+      { x: 0, y: 1.4, z: 0, radius: 0.43, depth: 0.3 },
+      { x: 0, y: 1.55, z: 0, radius: 0.32, depth: 0.24 },
+      { x: 0, y: 1.63, z: 0, radius: 0.24, depth: 0.21 },
+    ]);
     cylinder("belt", root, palette.cream, [0, 0.86, 0], 0.12, 0.73);
     cylinder("helmet collar", root, palette.cream, [0, 1.64, 0], 0.15, 0.8);
     const head = new TransformNode("head", scene);
     head.parent = root;
-    sphere("face", head, palette.skin, [0, 2, -0.02], [0.57, 0.66, 0.54]);
+    sphere(
+      "face",
+      head,
+      palette.skin,
+      [0, 2.02, -0.02],
+      [0.57, 0.72, 0.53],
+      true,
+      16,
+    );
     sphere("nose", head, palette.skin, [0, 2, -0.31], [0.13, 0.15, 0.18]);
     for (const side of [-1, 1]) {
       sphere(
@@ -230,17 +335,12 @@ export function createWorkshop(scene: Scene) {
       );
     } else {
       sphere("hair", head, palette.hair, [0, 2.25, 0.06], [0.58, 0.26, 0.48]);
-      const quiff = cylinder(
-        "Tintin quiff",
-        head,
-        palette.hair,
-        [0.025, 2.42, -0.16],
-        0.34,
-        0.29,
-        0.025,
-      );
-      quiff.rotation.x = -0.65;
-      quiff.rotation.z = -0.2;
+      swept("swept golden quiff", head, palette.hair, [
+        { x: 0, y: 2.28, z: -0.12, radius: 0.22, depth: 0.16 },
+        { x: 0.01, y: 2.4, z: -0.17, radius: 0.17, depth: 0.12 },
+        { x: 0.04, y: 2.5, z: -0.2, radius: 0.1, depth: 0.07 },
+        { x: 0.07, y: 2.58, z: -0.16, radius: 0.01, depth: 0.008 },
+      ]);
     }
     sphere(
       "glass helmet",
@@ -281,26 +381,35 @@ export function createWorkshop(scene: Scene) {
       sphere("sleeve", arm, palette.orange, [0, -0.28, 0], [0.3, 0.65, 0.32]);
       cylinder("cuff", arm, palette.cream, [0, -0.53, 0], 0.1, 0.31);
       sphere("glove", arm, palette.orange, [0, -0.67, 0], [0.31, 0.29, 0.31]);
+      sphere(
+        "glove thumb",
+        arm,
+        palette.orange,
+        [side * -0.14, -0.62, -0.06],
+        [0.12, 0.18, 0.15],
+        false,
+        6,
+      );
       arms.push(arm);
       const leg = new TransformNode("leg pivot", scene);
       leg.parent = root;
       leg.position.set(side * 0.23, 0.87, 0);
       sphere("trouser", leg, palette.orange, [0, -0.34, 0], [0.35, 0.68, 0.38]);
       cylinder("ankle ring", leg, palette.cream, [0, -0.54, 0], 0.1, 0.35);
-      box(
+      bevelBox(
         "moon boot",
         leg,
         palette.orange,
         [0, -0.69, -0.1],
         [0.39, 0.26, 0.58],
       );
-      box(
+      bevelBox(
         "boot sole",
         leg,
         palette.black,
         [0, -0.82, -0.1],
         [0.4, 0.045, 0.6],
-        false,
+        0.02,
       );
       legs.push(leg);
       cylinder(
@@ -310,6 +419,15 @@ export function createWorkshop(scene: Scene) {
         [side * 0.21, 1.23, 0.45],
         0.85,
         0.31,
+      );
+      sphere(
+        "rounded tank top",
+        root,
+        palette.blue,
+        [side * 0.21, 1.65, 0.45],
+        [0.31, 0.25, 0.31],
+        false,
+        8,
       );
       cylinder(
         "tank cap",
@@ -418,14 +536,14 @@ export function createWorkshop(scene: Scene) {
       CreateLathe(
         "checked rocket",
         {
-          shape: [
-            new Vector3(0.85, 1, 0),
-            new Vector3(1.2, 2, 0),
-            new Vector3(1.3, 5.2, 0),
-            new Vector3(1.08, 7.6, 0),
-            new Vector3(0.7, 9.3, 0),
-            new Vector3(0.03, 11.4, 0),
-          ],
+          shape: Array.from({ length: 41 }, (_, i) => {
+            const t = i / 40,
+              y = 1 + t * 10.4;
+            const radius =
+              (0.88 + 0.65 * Math.sin(t * Math.PI * 0.9)) *
+              Math.pow(1 - t, 0.5);
+            return new Vector3(Math.max(0.012, radius), y, 0);
+          }),
           tessellation: 48,
           cap: Mesh.CAP_ALL,
         },
@@ -450,7 +568,6 @@ export function createWorkshop(scene: Scene) {
     const mat = material("rocket checks", "#ffffff");
     mat.diffuseTexture = tex;
     hull.material = mat;
-    cylinder("red nose", root, palette.red, [0, 10.1, 0], 2.7, 1.43, 0);
     cylinder("engine nozzle", root, palette.black, [0, 0.85, 0], 0.7, 1.4, 1);
     for (let i = 0; i < 3; i++) {
       const fin = new Mesh("swept red fin", scene);
@@ -539,19 +656,21 @@ export function createWorkshop(scene: Scene) {
   }
   function rover() {
     const root = new TransformNode("lunar tank", scene);
-    box(
+    bevelBox(
       "tracks left",
       root,
       palette.black,
       [-1.07, 0.55, 0],
       [0.45, 0.75, 2.7],
+      0.22,
     );
-    box(
+    bevelBox(
       "tracks right",
       root,
       palette.black,
       [1.07, 0.55, 0],
       [0.45, 0.75, 2.7],
+      0.22,
     );
     const wheels: Mesh[] = [];
     for (const side of [-1, 1])
@@ -567,9 +686,42 @@ export function createWorkshop(scene: Scene) {
         wheel.rotation.z = Math.PI / 2;
         wheels.push(wheel);
       }
-    box("rover chassis", root, palette.orange, [0, 0.9, 0], [1.8, 0.55, 2.45]);
+    bevelBox(
+      "rover chassis",
+      root,
+      palette.orange,
+      [0, 0.9, 0],
+      [1.8, 0.55, 2.45],
+      0.16,
+    );
     box("open cockpit", root, palette.blue, [0, 1.22, -0.28], [1.5, 0.2, 1.3]);
     box("seat back", root, palette.cream, [0, 1.65, 0.48], [1.4, 0.8, 0.2]);
+    bevelBox(
+      "front bumper",
+      root,
+      palette.cream,
+      [0, 0.65, -1.3],
+      [1.7, 0.14, 0.18],
+      0.05,
+    );
+    for (const side of [-1, 1]) {
+      box(
+        "rover fender",
+        root,
+        palette.orange,
+        [side * 1.07, 0.96, 0],
+        [0.5, 0.12, 2.2],
+      );
+      for (let i = 0; i < 7; i++)
+        box(
+          "track tread",
+          root,
+          palette.black,
+          [side * 1.07, 0.93, -1.05 + i * 0.35],
+          [0.48, 0.05, 0.08],
+          false,
+        );
+    }
     const windshield = box(
       "windshield",
       root,
@@ -614,6 +766,7 @@ export function createWorkshop(scene: Scene) {
     palette,
     sphere,
     box,
+    bevelBox,
     cylinder,
     label,
     finish,
@@ -622,4 +775,52 @@ export function createWorkshop(scene: Scene) {
     rocket,
     rover,
   };
+}
+
+/** Join rigid parts by parent, material and outline; preserve animated pivots. */
+export function batchRigidMeshes(scene: Scene, moving: Set<Mesh>) {
+  const groups = new Map<string, Mesh[]>();
+  for (const mesh of [...scene.meshes]) {
+    if (
+      !(mesh instanceof Mesh) ||
+      moving.has(mesh) ||
+      mesh.instances.length ||
+      !mesh.isEnabled() ||
+      !mesh.isVisible ||
+      mesh.billboardMode ||
+      !mesh.material ||
+      mesh.material.alpha < 1 ||
+      mesh.getTotalVertices() === 0
+    )
+      continue;
+    if (!mesh.isVerticesDataPresent("uv"))
+      mesh.setVerticesData("uv", new Float32Array(mesh.getTotalVertices() * 2));
+    const key = `${mesh.parent?.uniqueId ?? "world"}/${mesh.material.uniqueId}/${mesh.renderOutline}/${mesh.getVerticesDataKinds().sort().join(",")}`;
+    const group = groups.get(key) || [];
+    group.push(mesh);
+    groups.set(key, group);
+  }
+  for (const meshes of groups.values()) {
+    if (meshes.length < 2) continue;
+    const first = meshes[0],
+      parent = first.parent as TransformNode | null;
+    const outlined = first.renderOutline,
+      ink = first.outlineColor.clone(),
+      width = first.outlineWidth;
+    const frozen = meshes.every((mesh) => mesh.isWorldMatrixFrozen);
+    const inverse = parent
+      ? Matrix.Invert(parent.computeWorldMatrix(true))
+      : null;
+    for (const mesh of meshes) mesh.computeWorldMatrix(true);
+    const merged = Mesh.MergeMeshes(meshes, true, true);
+    if (!merged) continue;
+    if (inverse) merged.bakeTransformIntoVertices(inverse);
+    merged.parent = parent;
+    merged.name = `${parent?.name || "scenery"} · ${first.material?.name || "parts"}`;
+    merged.isPickable = false;
+    merged.renderOutline = outlined;
+    merged.outlineColor = ink;
+    merged.outlineWidth = width;
+    if (frozen) merged.freezeWorldMatrix();
+  }
 }

@@ -18,8 +18,10 @@ import { CreateDisc } from "@babylonjs/core/Meshes/Builders/discBuilder";
 import { CreateTorus } from "@babylonjs/core/Meshes/Builders/torusBuilder";
 import { CreateLines } from "@babylonjs/core/Meshes/Builders/linesBuilder";
 import "@babylonjs/core/Meshes/instancedMesh";
-import { createWorkshop } from "./models";
+import { batchRigidMeshes, createWorkshop } from "./models";
 import { CAVE, SAMPLE_SITES } from "./mission";
+import { RALLY_GATES, MOON_HOOPS } from "./challenges";
+import { renderScale, nearSegment } from "./rendering";
 
 export async function createWorld(canvas: HTMLCanvasElement) {
   if (!Engine.isSupported()) throw new Error("WebGL is unavailable.");
@@ -29,9 +31,20 @@ export async function createWorld(canvas: HTMLCanvasElement) {
     powerPreference: "default",
   });
   const mobile = matchMedia("(pointer: coarse)").matches;
-  engine.setHardwareScalingLevel(
-    1 / Math.min(devicePixelRatio || 1, mobile ? 1.4 : 1.7),
-  );
+  let low = false;
+  const resize = () => {
+    engine.setHardwareScalingLevel(
+      renderScale(
+        canvas.clientWidth,
+        canvas.clientHeight,
+        devicePixelRatio || 1,
+        low,
+      ),
+    );
+    engine.resize();
+  };
+  resize();
+  engine.maxFPS = 30;
   const scene = new Scene(engine);
   scene.clearColor = Color4.FromHexString("#101d30ff");
   scene.skipPointerMovePicking = true;
@@ -71,7 +84,7 @@ export async function createWorld(canvas: HTMLCanvasElement) {
   sun.shadowMinZ = 1;
   sun.shadowMaxZ = 180;
   sun.shadowFrustumSize = 100;
-  const shadows = new ShadowGenerator(mobile ? 1024 : 2048, sun);
+  const shadows = new ShadowGenerator(1024, sun);
   shadows.usePercentageCloserFiltering = true;
   shadows.filteringQuality = ShadowGenerator.QUALITY_LOW;
   shadows.bias = 0.002;
@@ -109,7 +122,7 @@ export async function createWorld(canvas: HTMLCanvasElement) {
   }
   const ground = CreateGround(
     "cratered lunar plain",
-    { width: 200, height: 200, subdivisions: 160, updatable: true },
+    { width: 200, height: 200, subdivisions: 128, updatable: true },
     scene,
   );
   const positions = ground.getVerticesData(VertexBuffer.PositionKind)!;
@@ -170,7 +183,13 @@ export async function createWorld(canvas: HTMLCanvasElement) {
     if (
       Math.hypot(x, z) < 10 ||
       SAMPLE_SITES.some((p) => Math.hypot(x - p.x, z - p.z) < 5) ||
-      Math.hypot(x - CAVE.x, z - CAVE.z) < 9
+      Math.hypot(x - CAVE.x, z - CAVE.z) < 9 ||
+      RALLY_GATES.some(
+        (gate, i) =>
+          nearSegment(x, z, gate, RALLY_GATES[(i + 1) % RALLY_GATES.length]) <
+          4.5,
+      ) ||
+      MOON_HOOPS.some((gate) => Math.hypot(x - gate.x, z - gate.z) < 3.5)
     )
       continue;
     const size = 0.4 + random() * 2.3;
@@ -182,22 +201,45 @@ export async function createWorld(canvas: HTMLCanvasElement) {
     rock.freezeWorldMatrix();
     if (size > 1.2) obstacles.push({ x, z, radius: size * 0.55 });
   }
-  for (let i = 0; i < 38; i++) {
-    const angle = (i / 38) * Math.PI * 2,
-      distance = 82 + random() * 14;
-    const mountain = sphere(
-      "rim mountains",
-      null,
-      mountainMat,
-      [Math.sin(angle) * distance, 2, Math.cos(angle) * distance],
-      [18 + random() * 15, 7 + random() * 13, 18 + random() * 13],
-      false,
-      2,
+  const ridge = new Mesh("sculpted lunar mountain range", scene);
+  const ridgeData = new VertexData(),
+    ridgePositions: number[] = [],
+    ridgeIndices: number[] = [];
+  const ridgeSteps = 160;
+  const peaks = Array.from({ length: ridgeSteps }, (_, i) => {
+    const a = (i / ridgeSteps) * Math.PI * 2;
+    return (
+      7 +
+      Math.pow((Math.sin(a * 9) + 1) * 0.5, 2) * 12 +
+      Math.pow((Math.sin(a * 17 + 0.7) + 1) * 0.5, 3) * 7 +
+      random() * 2
     );
-    mountain.convertToFlatShadedMesh();
-    mountain.rotation.y = random() * 6;
-    mountain.freezeWorldMatrix();
-  }
+  });
+  for (let ring = 0; ring < 4; ring++)
+    for (let i = 0; i <= ridgeSteps; i++) {
+      const a = (i / ridgeSteps) * Math.PI * 2,
+        peak = peaks[i % ridgeSteps];
+      const radius = [70, 81, 94, 114][ring] + Math.sin(a * 13 + ring) * 2.4;
+      const h =
+        ring === 0 ? -0.8 : ring === 1 ? peak * 0.32 : ring === 2 ? peak : 3;
+      ridgePositions.push(Math.sin(a) * radius, h, Math.cos(a) * radius);
+    }
+  for (let ring = 0; ring < 3; ring++)
+    for (let i = 0; i < ridgeSteps; i++) {
+      const a = ring * (ridgeSteps + 1) + i,
+        b = a + ridgeSteps + 1;
+      ridgeIndices.push(a, a + 1, b, a + 1, b + 1, b);
+    }
+  const ridgeNormals: number[] = [];
+  VertexData.ComputeNormals(ridgePositions, ridgeIndices, ridgeNormals);
+  ridgeData.positions = ridgePositions;
+  ridgeData.indices = ridgeIndices;
+  ridgeData.normals = ridgeNormals;
+  ridgeData.applyToMesh(ridge);
+  ridge.material = mountainMat;
+  ridge.isPickable = false;
+  ridge.convertToFlatShadedMesh();
+  ridge.freezeWorldMatrix();
   const stars = new Mesh("star field", scene),
     starData = new VertexData();
   const starPositions: number[] = [],
@@ -322,18 +364,6 @@ export async function createWorld(canvas: HTMLCanvasElement) {
   const rover = shop.rover();
   rover.root.position.set(7, height(7, -4), -4);
   rover.root.rotation.y = -0.7;
-  for (const root of [
-    rocket.root,
-    player.root,
-    captain.root,
-    snowy.root,
-    rover.root,
-  ]) {
-    for (const mesh of root.getChildMeshes())
-      if (!mesh.name.includes("glass") && !mesh.name.includes("bubble"))
-        shadows.addShadowCaster(mesh, false);
-  }
-  captain.root.setEnabled(false);
   const markerMat = material("sample markers", "#e8b847", true);
   const samples = SAMPLE_SITES.map((site, i) => {
     const root = new TransformNode(`sample ${i}`, scene);
@@ -373,29 +403,50 @@ export async function createWorld(canvas: HTMLCanvasElement) {
   const caveRoot = new TransformNode("ice cave", scene);
   caveRoot.position.set(CAVE.x, height(CAVE.x, CAVE.z), CAVE.z + 3);
   const caveStone = material("cave stone", "#797c7b");
-  for (const side of [-1, 1]) {
-    const wall = sphere(
-      "cave pillar",
-      caveRoot,
-      caveStone,
-      [side * 3.5, 2, 0.8],
-      [3.5, 5.5, 7],
-      true,
-      2,
-    );
-    wall.convertToFlatShadedMesh();
-    obstacles.push({ x: CAVE.x + side * 3.5, z: CAVE.z + 3.8, radius: 1.8 });
-  }
-  const roof = sphere(
-    "cave arch",
-    caveRoot,
-    caveStone,
-    [0, 4.9, 1.2],
-    [9, 3.4, 7],
-    true,
-    2,
-  );
-  roof.convertToFlatShadedMesh();
+  const arch = new Mesh("sculpted cave arch", scene),
+    archData = new VertexData();
+  const archPositions: number[] = [],
+    archIndices: number[] = [],
+    archSteps = 18;
+  for (const z of [-2.8, 3.5])
+    for (const outer of [true, false])
+      for (let i = 0; i <= archSteps; i++) {
+        const angle = (i / archSteps) * Math.PI;
+        const ripple = outer ? 1 + Math.sin(i * 2.7) * 0.035 : 1;
+        archPositions.push(
+          Math.cos(angle) * (outer ? 4.9 : 2.65) * ripple,
+          outer ? 0.1 + Math.sin(angle) * 6 : 0.1 + Math.sin(angle) * 3.9,
+          z,
+        );
+      }
+  const strip = (a: number, b: number, reverse: boolean) => {
+    for (let i = 0; i < archSteps; i++) {
+      const triangles = [a + i, b + i, a + i + 1, a + i + 1, b + i, b + i + 1];
+      if (reverse) triangles.reverse();
+      archIndices.push(...triangles);
+    }
+  };
+  const n = archSteps + 1;
+  strip(0, n, false);
+  strip(n * 2, n * 3, true);
+  strip(0, n * 2, true);
+  strip(n, n * 3, false);
+  for (let i = 0; i < archIndices.length; i += 3)
+    [archIndices[i + 1], archIndices[i + 2]] = [
+      archIndices[i + 2],
+      archIndices[i + 1],
+    ];
+  archData.positions = archPositions;
+  archData.indices = archIndices;
+  const archNormals: number[] = [];
+  VertexData.ComputeNormals(archPositions, archIndices, archNormals);
+  archData.normals = archNormals;
+  archData.applyToMesh(arch);
+  finish(arch, caveRoot, caveStone);
+  arch.convertToFlatShadedMesh();
+  for (const side of [-1, 1])
+    for (const z of [CAVE.z + 1, CAVE.z + 4, CAVE.z + 6])
+      obstacles.push({ x: CAVE.x + side * 3.8, z, radius: 1.1 });
   sphere(
     "cave shadow",
     caveRoot,
@@ -548,26 +599,37 @@ export async function createWorld(canvas: HTMLCanvasElement) {
     false,
   );
   warning.setEnabled(false);
-  const particles = Array.from({ length: 28 }, (_, i) => {
-    const mesh = sphere(
-      `dust mote ${i}`,
+  const dustTemplates = [palette.cream, palette.yellow].map((mat, i) => {
+    const source = sphere(
+      `dust template ${i}`,
       null,
-      i % 3 ? palette.cream : palette.yellow,
-      [0, -20, 0],
-      [0.12, 0.12, 0.12],
+      mat,
+      [0, 0, 0],
+      [1, 1, 1],
       false,
       3,
     );
+    source.isVisible = false;
+    return source;
+  });
+  const particles = Array.from({ length: 28 }, (_, i) => {
+    const mesh = dustTemplates[i % 3 ? 0 : 1].createInstance(`dust mote ${i}`);
+    mesh.isPickable = false;
     mesh.setEnabled(false);
+    mesh.scaling.setAll(0.12);
     return { mesh, velocity: Vector3.Zero(), life: 0 };
   });
-  const prints = Array.from({ length: 48 }, (_, i) => {
-    const mesh = finish(
-      CreateDisc(`footprint ${i}`, { radius: 0.12, tessellation: 8 }, scene),
-      null,
-      material(`footprint ink ${i}`, "#827e75"),
-      false,
-    );
+  const printMaterial = material("footprint ink", "#827e75");
+  const printTemplate = finish(
+    CreateDisc("footprint template", { radius: 0.12, tessellation: 8 }, scene),
+    null,
+    printMaterial,
+    false,
+  );
+  printTemplate.isVisible = false;
+  const prints = Array.from({ length: 32 }, (_, i) => {
+    const mesh = printTemplate.createInstance(`footprint ${i}`);
+    mesh.isPickable = false;
     mesh.rotation.x = Math.PI / 2;
     mesh.scaling.y = 1.6;
     mesh.setEnabled(false);
@@ -610,18 +672,159 @@ export async function createWorld(canvas: HTMLCanvasElement) {
       if (p.life > 0) {
         p.life -= delta;
         p.velocity.y -= delta * 3;
-        p.mesh.position.addInPlace(p.velocity.scale(delta));
+        p.mesh.position.x += p.velocity.x * delta;
+        p.mesh.position.y += p.velocity.y * delta;
+        p.mesh.position.z += p.velocity.z * delta;
         p.mesh.scaling.setAll(Math.max(0.02, p.life * 0.17));
         if (p.life <= 0) p.mesh.setEnabled(false);
       }
   }
-  function lowQuality(low: boolean) {
-    engine.setHardwareScalingLevel(
-      low ? 1.2 : 1 / Math.min(devicePixelRatio || 1, mobile ? 1.4 : 1.7),
+  function lowQuality(value: boolean) {
+    low = value;
+    resize();
+    shadows.getShadowMap()!.resize(low ? 512 : 1024);
+  }
+  const rally = RALLY_GATES.map((site, i) => {
+    const root = new TransformNode(`rally checkpoint ${i + 1}`, scene);
+    root.position.set(site.x, height(site.x, site.z), site.z);
+    const next = RALLY_GATES[(i + 1) % RALLY_GATES.length];
+    root.rotation.y = Math.atan2(next.x - site.x, next.z - site.z);
+    for (const side of [-1, 1]) {
+      cylinder(
+        "rally post",
+        root,
+        palette.cream,
+        [side * 2.8, 1.5, 0],
+        3,
+        0.12,
+        0.12,
+        false,
+      );
+      sphere(
+        "checkpoint lamp",
+        root,
+        palette.yellow,
+        [side * 2.8, 3.05, 0],
+        [0.35, 0.35, 0.35],
+        false,
+        6,
+      );
+    }
+    const hoop = finish(
+      CreateTorus(
+        "rally arch",
+        { diameter: 5.5, thickness: 0.12, tessellation: 32 },
+        scene,
+      ),
+      root,
+      palette.teal,
+      false,
     );
-    shadows.getShadowMap()!.resize(low ? 512 : mobile ? 1024 : 2048);
+    hoop.rotation.x = Math.PI / 2;
+    hoop.position.y = 2.6;
+    const number = label(
+      "checkpoint number",
+      i === 0 ? "START" : String(i),
+      1.5,
+      root,
+      "#ffd66e",
+    );
+    number.position.y = 5.5;
+    number.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    return { root, hoop };
+  });
+  const hoops = MOON_HOOPS.map((site, i) => {
+    const root = new TransformNode(`Moon jump hoop ${i + 1}`, scene);
+    root.position.set(site.x, height(site.x, site.z), site.z);
+    const hoop = finish(
+      CreateTorus(
+        "jump hoop",
+        { diameter: 2.5, thickness: 0.12, tessellation: 32 },
+        scene,
+      ),
+      root,
+      palette.yellow,
+      false,
+    );
+    hoop.position.y = 2.9;
+    hoop.rotation.x = Math.PI / 2;
+    hoop.rotation.y = -1;
+    const sign = label(
+      "jump hoop number",
+      `JUMP ${i + 1}`,
+      1.6,
+      root,
+      "#b5e5df",
+    );
+    sign.position.y = 4.5;
+    sign.billboardMode = Mesh.BILLBOARDMODE_ALL;
+    return { root, hoop };
+  });
+  const biscuitRoot = new TransformNode("Snowy's Moon biscuit", scene);
+  const biscuit = shop.bevelBox(
+    "space biscuit",
+    biscuitRoot,
+    palette.cream,
+    [0, 0, 0],
+    [0.55, 0.18, 0.25],
+    0.06,
+  );
+  for (const side of [-1, 1])
+    for (const z of [-0.12, 0.12])
+      sphere(
+        "biscuit end",
+        biscuitRoot,
+        palette.cream,
+        [side * 0.26, 0, z],
+        [0.24, 0.19, 0.25],
+        false,
+        6,
+      );
+  const moving = new Set<Mesh>([
+    earth,
+    rocket.flame,
+    snowy.tail,
+    ...rover.wheels,
+    ...samples.map((s) => s.crystal),
+    meteor,
+    warning,
+    tether,
+    biscuit,
+    ...rally.map((g) => g.hoop),
+    ...hoops.map((g) => g.hoop),
+  ]);
+  batchRigidMeshes(scene, moving);
+  for (const root of [
+    rocket.root,
+    player.root,
+    captain.root,
+    snowy.root,
+    rover.root,
+    caveRoot,
+  ])
+    for (const mesh of root.getChildMeshes())
+      if (
+        mesh.material &&
+        mesh.material.alpha === 1 &&
+        !mesh.billboardMode &&
+        !mesh.name.includes("flame") &&
+        mesh.getBoundingInfo().boundingBox.extendSize.length() > 0.18
+      )
+        shadows.addShadowCaster(mesh, false);
+  captain.root.setEnabled(false);
+  rally.forEach((g) => g.root.setEnabled(false));
+  hoops.forEach((g) => g.root.setEnabled(false));
+  biscuitRoot.setEnabled(false);
+  function resetEffects() {
+    for (const print of prints) print.setEnabled(false);
+    for (const p of particles) {
+      p.life = 0;
+      p.mesh.setEnabled(false);
+    }
+    printIndex = 0;
   }
   await scene.whenReadyAsync();
+  for (const mat of scene.materials) mat.freeze();
   return {
     engine,
     scene,
@@ -644,6 +847,11 @@ export async function createWorld(canvas: HTMLCanvasElement) {
     burst,
     footprint,
     lowQuality,
+    resize,
+    rally,
+    hoops,
+    biscuit: biscuitRoot,
+    resetEffects,
   };
 }
 export type World = Awaited<ReturnType<typeof createWorld>>;
