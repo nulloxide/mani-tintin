@@ -1,20 +1,17 @@
-import './style.css';
-
-const status = document.querySelector<HTMLParagraphElement>('#mission-status')!;
-const land = document.querySelector<HTMLButtonElement>('#land')!;
+import "./style.css";
 
 async function start() {
   try {
-    const { createMoonScene } = await import('./moon');
-    await createMoonScene();
+    const { startGame } = await import("./game");
+    await startGame();
   } catch (error) {
-    console.error('Unable to start the Moon scene.', error);
-    status.textContent = 'The 3D scene could not load. Try refreshing in an up-to-date Safari, Chrome, Edge, or Firefox browser with graphics acceleration enabled.';
-    if (import.meta.env.DEV) status.textContent += ` ${String(error)}`;
-    status.classList.add('error');
-    land.textContent = 'Reload preview';
-    land.disabled = false;
-    land.onclick = () => window.location.reload();
+    console.error("Unable to start the expedition.", error);
+    document.querySelector<HTMLElement>("#load-status")!.textContent =
+      "The scene could not load. Please reload in a recent browser with WebGL enabled.";
+    const start = document.querySelector<HTMLButtonElement>("#start")!;
+    start.disabled = false;
+    start.textContent = "Reload expedition";
+    start.onclick = () => location.reload();
   }
 }
 

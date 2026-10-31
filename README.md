@@ -1,47 +1,76 @@
-# Tintin — Destination Moon
+# Tintin & Mani — Destination Moon
 
-A 3D Moon adventure for computer, phone, and iPad browsers. This first preview includes a lunar scene, an orbit camera, and a short landing sequence. Full gameplay is still to come.
+A browser adventure made for Commander Mani, inspired by *Destination Moon* and *Explorers on the Moon*. Play as Tintin, rescue Captain Haddock near Adonis, explore the Moon, find Snowy at the ice cave, and bring the crew home.
 
-[Open the site](https://nulloxide.com/mani-tintin/)
+**[Play the game](https://nulloxide.com/mani-tintin/)**
 
-## Local preview
+## The adventure
+
+- Time three tether pulls to rescue Haddock from his accidental orbit.
+- Land the red-and-white rocket and explore a cratered 3D landscape.
+- Collect five samples, including ice near the cave, and rescue Snowy.
+- Drive the **Mani Express** lunar tank, leave footprints, and try low-gravity jumps.
+- Return to base, repair the launch sequence, and fly home.
+- Earn a mission rating and save a personal best on the current browser.
+
+**Explorer** has unlimited oxygen and no meteor hazards. **Expedition** adds oxygen management and telegraphed impacts. Base camp refills oxygen. If oxygen runs out, Tintin returns safely to base with discoveries intact. Pausing or leaving the tab stops mission time.
+
+The short adventure adapts selected events from the books with original dialogue and a lighthearted ending. Mani's name appears in mission control, radio banter, vehicle markings, and the mission report. It is a personal fan project, not an official Tintin release.
+
+## Controls
+
+| Action | Computer | Phone / tablet |
+| --- | --- | --- |
+| Move | WASD or arrow keys | Left thumb stick |
+| Look around | Drag scene | Swipe scene |
+| Zoom | Scroll | Pinch |
+| Moon jump | Space | Jump button |
+| Collect / rescue / drive / exit | E or action button | Gold action button |
+| Run | Shift + move | Use rover for faster travel |
+| Pause | Escape or Pause | Pause button |
+
+The rover's jump button becomes its horn. The compass points to the nearest unfinished objective; the map shows samples, cave, rover, and base. Sound and graphics controls are available throughout play. The pause screen contains control instructions.
+
+## Development
 
 ```sh
 npm ci
 npm run dev
 ```
 
-Open http://127.0.0.1:5173/mani-tintin/ and select **Land on the Moon**. Drag to orbit, pinch or scroll to zoom, and select **Fly again** to reset. Buttons also work with a keyboard.
-
-## Stack
-
-- Babylon.js renders the 3D scene using WebGL.
-- TypeScript keeps game code checked as it grows.
-- Vite builds versioned assets for GitHub Pages.
-- Native HTML controls support mouse, touch, and keyboard input.
-
-Rendering resolution is capped and can drop on slower devices. The scene pauses when its tab is hidden. No server, sign-in, or installation is required to play. Use a recent browser with WebGL enabled.
-
-## Validation
+Open http://127.0.0.1:5173/mani-tintin/.
 
 ```sh
+npm test
 npm run build
 npm run preview
 ```
 
-Check http://127.0.0.1:4173/mani-tintin/ at desktop, phone, and tablet sizes. Test landing, resetting, orbiting, zooming, and returning from a background tab. Physical-device performance still needs checking on the intended phones and iPads.
+Tests cover collection rules, story progression, launch puzzle recovery, oxygen, rescue preservation, replay reset, ratings, and timer formatting. Before publishing, also play the browser mission and inspect desktop, phone, and tablet layouts. Physical-device frame rates still need checking on the intended phones and iPads.
+
+## Rendering
+
+Babylon.js, TypeScript, and Vite. The 3D models, terrain, textures, and radio portraits are built in the project. Clean outlines, warm lunar colors, clear helmets, orange spacesuits, and the checkerboard rocket give the scene its comic look. Audio uses quiet synthesized cues, unlocked by a player interaction.
+
+WebGL is required; WebGPU is not. Rendering resolution is capped, shadow resolution can be reduced, and the game switches to lighter graphics if initial frames are consistently slow. No account, server, installation, or external asset service is required. Personal bests use local storage when available.
 
 ## Publishing
 
-The `main` branch automatically installs locked dependencies, checks TypeScript, builds, and deploys `dist/` to GitHub Pages. The workflow can also be run manually from the Actions tab.
+Pushes to `main` run tests, check TypeScript, build, and publish only `dist/` through GitHub Pages. Vite uses `/mani-tintin/` as its base path. Keep credentials and local settings out of the repository.
 
-Vite uses `/mani-tintin/` as its base path. Import assets through Vite or use `import.meta.env.BASE_URL` for public assets.
+## Files
 
-## Project structure
+- `src/game.ts`: chapter flow, interactions, movement, HUD, and lifecycle.
+- `src/mission.ts`: mission progression and scoring.
+- `src/world.ts`: terrain, scenery, lighting, markers, and effects.
+- `src/models.ts`: characters, rocket, rover, and materials.
+- `src/input.ts`, `src/audio.ts`, `src/portraits.ts`: controls, sound, and radio portraits.
+- `index.html`, `src/style.css`: responsive interface and dialogs.
+- `tests/mission.test.ts`: mission rules and recovery checks.
 
-- `index.html`: page and accessible controls.
-- `src/main.ts`: startup and loading fallback.
-- `src/moon.ts`: scene, camera, and landing sequence.
-- `src/style.css`: responsive layout.
-- `vite.config.ts`: build and base-path configuration.
-- `.github/workflows/deploy.yml`: automatic deployment.
+## References
+
+- [Destination Moon — Tintin.com](https://www.tintin.com/en/albums/destination-moon)
+- [Explorers on the Moon — Tintin.com](https://www.tintin.com/en/albums/explorers-on-the-moon)
+- [Babylon.js shadows](https://doc.babylonjs.com/features/featuresDeepDive/lights/shadows)
+- [Babylon.js camera inputs](https://doc.babylonjs.com/features/featuresDeepDive/cameras/customizingCameraInputs/)

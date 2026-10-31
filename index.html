@@ -1,40 +1,259 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#080c13">
-  <meta name="description" content="Join Tintin on a 3D journey to the Moon. An early landing preview for computer, phone, and tablet browsers.">
-  <title>Tintin — Destination Moon</title>
-  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23080c13'/%3E%3Cpath d='M20 5q10 9 7 22H13Q10 14 20 5' fill='%23e96148'/%3E%3Cpath d='M13 21h14v6H13z' fill='%23fff6e8'/%3E%3Cpath d='m16 31 4 6 4-6' fill='%23f3c97b'/%3E%3C/svg%3E">
-</head>
-<body>
-  <canvas id="moon-scene" aria-label="3D Moon landing scene. Drag to look around; pinch or scroll to zoom." tabindex="0"></canvas>
-  <div class="vignette" aria-hidden="true"></div>
-  <header class="topbar">
-    <a class="brand" href="./" aria-label="Tintin, Destination Moon">TINTIN<span>SPACE EXPLORERS</span></a>
-    <span class="preview-badge"><i></i> FIRST LOOK · 3D PREVIEW</span>
-  </header>
-  <main class="mission">
-    <p class="eyebrow">MISSION 01 <span> / </span> THE LUNAR EXPEDITION</p>
-    <h1>Destination<span>Moon.</span></h1>
-    <p class="intro">One small step. One extraordinary adventure.<br>Bring Tintin’s rocket home to the Moon.</p>
-    <div class="actions">
-      <button id="land" class="primary" type="button" disabled>Preparing mission…</button>
-      <button id="reset" class="secondary" type="button" hidden>Fly again <span aria-hidden="true">↻</span></button>
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#101d30" />
+    <meta
+      name="description"
+      content="Commander Mani, your Moon adventure awaits! Join Tintin, Snowy and Captain Haddock in a playful 3D expedition with a lunar rover, cave rescue and a flight home."
+    />
+    <title>Tintin & Mani — Destination Moon</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='8' fill='%23fff1cd'/%3E%3Cpath d='M20 4q10 9 7 23H13Q10 13 20 4' fill='%23db3d31' stroke='%2318202b' stroke-width='2'/%3E%3Cpath d='M13 20h14v6H13z' fill='%23fff1cd'/%3E%3Cpath d='m16 30 4 7 4-7' fill='%23edaa35'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <canvas
+      id="moon-scene"
+      tabindex="0"
+      aria-label="3D Moon expedition. Move with W A S D or arrow keys, jump with Space, interact with E. Drag to look around."
+    ></canvas>
+    <div class="screen-frame" aria-hidden="true"></div>
+    <div id="shade" class="cover-shade" aria-hidden="true"></div>
+    <header class="topbar">
+      <a class="brand" href="./"
+        >TINTIN <span>×</span> MANI <small>DESTINATION MOON</small></a
+      >
+      <nav aria-label="Game settings">
+        <button
+          id="sound"
+          class="icon-button"
+          aria-pressed="true"
+          aria-label="Game sound"
+          title="Toggle sound"
+        >
+          ♪ <span>Sound on</span>
+        </button>
+        <button
+          id="quality"
+          class="icon-button"
+          aria-pressed="false"
+          aria-label="Lighter graphics"
+          title="Toggle lighter graphics"
+        >
+          ◈ <span>Graphics: high</span>
+        </button>
+        <button id="pause" class="icon-button" aria-label="Pause game" hidden>
+          Ⅱ <span>Pause</span>
+        </button>
+      </nav>
+    </header>
+
+    <main id="cover" class="cover">
+      <div class="edition">A SPECIAL ADVENTURE FOR MANI</div>
+      <p class="kicker">THE ADVENTURES OF TINTIN</p>
+      <h1>Destination<br /><span>Moon!</span></h1>
+      <p class="cover-copy">
+        Captain missing. Snowy exploring.<br />A rocket full of trouble.<br /><strong
+          >Good thing you’re in charge, Mani.</strong
+        >
+      </p>
+      <fieldset class="mode-select">
+        <legend>Choose your adventure</legend>
+        <label
+          ><input type="radio" name="mode" value="explorer" checked /><span
+            ><b>Explorer</b
+            ><small>Take your time · unlimited oxygen</small></span
+          ></label
+        >
+        <label
+          ><input type="radio" name="mode" value="expedition" /><span
+            ><b>Expedition</b
+            ><small>Watch your oxygen · dodge impacts</small></span
+          ></label
+        >
+      </fieldset>
+      <button id="start" class="primary" disabled>Preparing the rocket…</button>
+      <p id="load-status" role="status">
+        Packing sandwiches. Checking spacesuits.
+      </p>
+      <p id="personal-best" class="best"></p>
+      <p class="cover-note">
+        A playful adaptation of <i>Destination Moon</i> &amp;
+        <i>Explorers on the Moon</i>.<br />New dialogue, one very important
+        commander.
+      </p>
+      <noscript>JavaScript and WebGL are needed to play this game.</noscript>
+    </main>
+    <div id="cover-stamp" class="cover-stamp" aria-hidden="true">
+      NEXT STOP<br /><strong>THE MOON</strong><span>SYLDAVIA → SPACE</span>
     </div>
-    <p id="mission-status" class="status" role="status" aria-live="polite">Loading your little corner of the universe.</p>
-    <noscript><p class="error">Enable JavaScript in your browser to explore the 3D Moon.</p></noscript>
-  </main>
-  <aside class="telemetry" aria-label="Mission readings">
-    <div><span>DESTINATION</span><strong>THE MOON</strong></div>
-    <div><span>ALTITUDE</span><strong><output id="altitude">120</output> <small>m</small></strong></div>
-    <div><span>MISSION</span><strong id="flight-state">STANDBY</strong></div>
-  </aside>
-  <footer>
-    <p><span class="control-icon" aria-hidden="true">✥</span> Drag to look around <span class="divider">/</span> Pinch or scroll to zoom</p>
-    <button id="view-reset" type="button" class="view-reset">Reset view ↗</button>
-  </footer>
-  <script type="module" src="/src/main.ts"></script>
-</body>
+
+    <section id="hud" hidden aria-label="Mission dashboard">
+      <div class="objective comic-panel">
+        <p id="chapter-label" class="chapter-label">
+          01 / AN UNLIKELY SATELLITE
+        </p>
+        <h2 id="objective-title">Rescue Captain Haddock</h2>
+        <p id="objective-hint">
+          Pull the tether when the Captain enters the green zone.
+        </p>
+        <div class="mission-counts">
+          <span id="sample-count">SAMPLES 0 / 5</span
+          ><span id="snowy-status">SNOWY: EXPLORING</span>
+        </div>
+      </div>
+      <div class="readings">
+        <div class="oxygen comic-panel">
+          <span>O₂ <b id="oxygen-text">100%</b></span>
+          <div class="oxygen-track"><i id="oxygen-fill"></i></div>
+        </div>
+        <span class="clock comic-panel" id="clock">0:00</span>
+      </div>
+      <div id="map-panel" class="map-panel comic-panel">
+        <div><b>LUNAR MAP</b><span>N ↑</span></div>
+        <canvas
+          id="minimap"
+          width="240"
+          height="240"
+          aria-label="Map: gold dots are samples, blue is the cave, red is the rocket."
+        ></canvas>
+        <p>● samples <span>◆ base</span></p>
+      </div>
+      <div id="waypoint" class="waypoint comic-panel"></div>
+      <div id="orbit-meter" class="orbit-meter comic-panel" hidden>
+        <span>WAIT FOR GREEN · THEN PULL</span>
+        <div class="orbit-track">
+          <i class="safe-zone"></i><i id="orbit-cursor"></i>
+        </div>
+        <b id="tether-count">TETHER 0 / 3</b>
+      </div>
+      <div
+        id="radio"
+        class="radio comic-panel"
+        role="status"
+        aria-live="polite"
+      >
+        <div id="portrait" aria-hidden="true"></div>
+        <div>
+          <p id="speaker"></p>
+          <p id="radio-line"></p>
+        </div>
+      </div>
+      <div id="toast" class="toast" role="status" hidden></div>
+      <div id="touch-controls" hidden>
+        <div
+          id="joystick"
+          class="joystick"
+          role="group"
+          aria-label="Drag to move"
+        >
+          <div id="stick-knob"></div>
+          <span>MOVE</span>
+        </div>
+        <button id="jump" class="jump-button" aria-label="Moon jump">
+          ↑<small>JUMP</small>
+        </button>
+      </div>
+      <button id="action" class="action-button" disabled>
+        <kbd>E</kbd> <span id="action-label">Explore the Moon</span>
+      </button>
+      <p id="controls-hint" class="controls-hint">
+        <kbd>WASD</kbd> move <span>·</span> <kbd>SPACE</kbd> moon jump
+        <span>·</span> <kbd>E</kbd> interact <span>·</span> drag to look
+      </p>
+    </section>
+
+    <section id="pause-panel" class="modal-backdrop" hidden>
+      <div
+        class="modal comic-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pause-title"
+        tabindex="-1"
+      >
+        <p class="chapter-label">MISSION CONTROL · MANI</p>
+        <h2 id="pause-title">A little space break.</h2>
+        <p>The Moon isn’t going anywhere. Neither is Haddock, hopefully.</p>
+        <div class="instructions">
+          <p><b>Move</b><span>WASD / arrows · left thumb stick</span></p>
+          <p><b>Look</b><span>Drag the scene · pinch / scroll to zoom</span></p>
+          <p><b>Moon jump</b><span>Space · ↑ button</span></p>
+          <p><b>Interact / rover</b><span>E · gold action button</span></p>
+          <p><b>Run</b><span>Shift + move</span></p>
+          <p>
+            <b>Refill oxygen</b><span>Return inside the base camp circle</span>
+          </p>
+        </div>
+        <p class="tip">
+          Gold markers lead to samples. The blue cave marker leads to Snowy.
+          Collect everything, then return to the rocket.
+        </p>
+        <button id="resume" class="primary">Back to the adventure →</button
+        ><button id="restart" class="secondary">Restart mission</button>
+      </div>
+    </section>
+    <section id="launch-panel" class="modal-backdrop" hidden>
+      <div
+        class="modal comic-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="launch-title"
+        tabindex="-1"
+      >
+        <p class="chapter-label">04 / THE FLIGHT HOME</p>
+        <h2 id="launch-title">Mani, we need a pilot!</h2>
+        <p>
+          A stowaway has tampered with the launch controls. Calculus has a
+          backup sequence. Tap the symbols in this order:
+        </p>
+        <div class="launch-sequence" aria-label="Star, Moon, Earth">
+          <span>1 ★ STAR</span><span>2 ☾ MOON</span><span>3 ⊕ EARTH</span>
+        </div>
+        <div class="launch-buttons">
+          <button data-symbol="earth">⊕<span>EARTH</span></button
+          ><button data-symbol="star">★<span>STAR</span></button
+          ><button data-symbol="moon">☾<span>MOON</span></button>
+        </div>
+        <p id="launch-feedback" role="status">
+          “Mani, press carefully. That other button makes tea.” — Calculus
+        </p>
+        <button id="leave-launch" class="secondary">Back to the surface</button>
+      </div>
+    </section>
+    <section id="win-panel" class="modal-backdrop" hidden>
+      <div
+        class="modal win comic-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="win-title"
+        tabindex="-1"
+      >
+        <p class="chapter-label">MISSION ACCOMPLISHED</p>
+        <div id="stars" class="stars" aria-label="Mission rating">★★★</div>
+        <h2 id="win-title">You did it, Mani!</h2>
+        <p>
+          Tintin, Snowy and the crew are heading home.<br />One small step for
+          Tintin. One giant adventure for Mani.
+        </p>
+        <div class="result-grid">
+          <div><b id="final-score"></b><span>MISSION POINTS</span></div>
+          <div><b id="final-time"></b><span>ON THE MOON</span></div>
+        </div>
+        <p id="award" class="award"></p>
+        <blockquote>
+          “Commander Mani, excellent work! Next time, can we visit somewhere
+          with a decent sandwich?”<cite>— Captain Haddock</cite>
+        </blockquote>
+        <p id="win-best" class="best"></p>
+        <button id="replay" class="primary">Another adventure ↻</button>
+      </div>
+    </section>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>
