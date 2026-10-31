@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#080c13">
+  <meta name="description" content="Join Tintin on a 3D journey to the Moon. An early landing preview for computer, phone, and tablet browsers.">
+  <title>Tintin — Destination Moon</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23080c13'/%3E%3Cpath d='M20 5q10 9 7 22H13Q10 14 20 5' fill='%23e96148'/%3E%3Cpath d='M13 21h14v6H13z' fill='%23fff6e8'/%3E%3Cpath d='m16 31 4 6 4-6' fill='%23f3c97b'/%3E%3C/svg%3E">
+</head>
+<body>
+  <canvas id="moon-scene" aria-label="3D Moon landing scene. Drag to look around; pinch or scroll to zoom." tabindex="0"></canvas>
+  <div class="vignette" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Tintin, Destination Moon">TINTIN<span>SPACE EXPLORERS</span></a>
+    <span class="preview-badge"><i></i> FIRST LOOK · 3D PREVIEW</span>
+  </header>
+  <main class="mission">
+    <p class="eyebrow">MISSION 01 <span> / </span> THE LUNAR EXPEDITION</p>
+    <h1>Destination<span>Moon.</span></h1>
+    <p class="intro">One small step. One extraordinary adventure.<br>Bring Tintin’s rocket home to the Moon.</p>
+    <div class="actions">
+      <button id="land" class="primary" type="button" disabled>Preparing mission…</button>
+      <button id="reset" class="secondary" type="button" hidden>Fly again <span aria-hidden="true">↻</span></button>
+    </div>
+    <p id="mission-status" class="status" role="status" aria-live="polite">Loading your little corner of the universe.</p>
+    <noscript><p class="error">Enable JavaScript in your browser to explore the 3D Moon.</p></noscript>
+  </main>
+  <aside class="telemetry" aria-label="Mission readings">
+    <div><span>DESTINATION</span><strong>THE MOON</strong></div>
+    <div><span>ALTITUDE</span><strong><output id="altitude">120</output> <small>m</small></strong></div>
+    <div><span>MISSION</span><strong id="flight-state">STANDBY</strong></div>
+  </aside>
+  <footer>
+    <p><span class="control-icon" aria-hidden="true">✥</span> Drag to look around <span class="divider">/</span> Pinch or scroll to zoom</p>
+    <button id="view-reset" type="button" class="view-reset">Reset view ↗</button>
+  </footer>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

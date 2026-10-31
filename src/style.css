@@ -1,0 +1,73 @@
+:root { color-scheme: dark; font-family: "Avenir Next", "Segoe UI", system-ui, sans-serif; color: #f7f1e8; background: #080c13; font-synthesis: none; }
+* { box-sizing: border-box; }
+body { margin: 0; width: 100%; min-height: 100svh; overflow-x: hidden; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button { font: inherit; cursor: pointer; touch-action: manipulation; }
+button:focus-visible, a:focus-visible, canvas:focus-visible { outline: 2px solid #ffcc8c; outline-offset: 5px; }
+[hidden] { display: none !important; }
+#moon-scene { position: fixed; inset: 0; width: 100%; height: 100%; outline: none; touch-action: none; }
+.vignette { position: fixed; inset: 0; pointer-events: none; background: linear-gradient(90deg, #080c13f2 0%, #080c13bb 30%, transparent 70%), linear-gradient(0deg, #080c13d9, transparent 25%); }
+.topbar { position: relative; display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 32px max(5vw, env(safe-area-inset-right)) 0 max(5vw, env(safe-area-inset-left)); pointer-events: none; }
+.brand { pointer-events: auto; color: #f7f1e8; text-decoration: none; font-size: 23px; font-weight: 850; letter-spacing: 4px; }
+.brand span { display: block; font-size: 8px; letter-spacing: 2.5px; color: #aab2bf; margin-top: 3px; font-weight: 500; }
+.preview-badge { font-size: 9px; letter-spacing: 1.6px; color: #c4cad2; display: flex; align-items: center; gap: 10px; }
+.preview-badge i { width: 5px; height: 5px; border-radius: 50%; background: #e8b37c; }
+.mission { position: relative; width: min(46vw, 590px); margin: clamp(68px, 15vh, 160px) 0 150px 5vw; pointer-events: none; }
+.eyebrow { font-size: 9px; letter-spacing: 2.2px; color: #e8b37c; font-weight: 650; margin: 0 0 26px; }
+.eyebrow span { color: #717782; padding: 0 10px; }
+h1 { font-size: clamp(52px, 6.6vw, 100px); line-height: .98; letter-spacing: -4px; margin: 0; font-weight: 750; }
+h1 span { display: block; color: #e8b37c; }
+.intro { font-size: clamp(13px, 1.1vw, 16px); color: #c0c4cc; line-height: 1.9; margin: 28px 0 30px; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.actions button { pointer-events: auto; border-radius: 8px; min-height: 52px; padding: 15px 23px; font-size: 13px; font-weight: 700; transition: background .2s, transform .2s; }
+.primary { background: #edb780; color: #17202b; border: 1px solid #edb780; }
+.primary:hover:enabled { background: #ffd1a2; transform: translateY(-2px); }
+.primary:disabled { opacity: .65; cursor: default; }
+.secondary { background: #111a26bb; color: #f7f1e8; border: 1px solid #ffffff30; }
+.secondary span { margin-left: 12px; }
+.status { color: #d0d6df; max-width: 360px; min-height: 42px; line-height: 1.7; font-size: 11px; margin: 18px 0 0; padding: 9px 12px; border-left: 1px solid #e8b37c80; background: #080c1380; border-radius: 0 5px 5px 0; }
+.error { color: #ffc2aa; font-size: 13px; line-height: 1.7; }
+.telemetry { position: fixed; right: 5vw; top: 125px; display: flex; gap: 36px; pointer-events: none; }
+.telemetry div { display: flex; flex-direction: column; gap: 8px; }
+.telemetry span { font-size: 8px; letter-spacing: 1.8px; color: #a4aebb; }
+.telemetry strong { font-size: 12px; letter-spacing: 1px; font-weight: 500; }
+.telemetry small { color: #a4aebb; font-size: 10px; }
+footer { position: fixed; bottom: 0; width: 100%; padding: 22px 5vw max(24px, env(safe-area-inset-bottom)); display: flex; justify-content: space-between; align-items: center; gap: 12px; color: #b1bac7; font-size: 10px; letter-spacing: .3px; pointer-events: none; }
+footer p { margin: 0; }
+.control-icon { font-size: 18px; color: #e8b37c; margin-right: 10px; }
+.divider { color: #5f6a78; padding: 0 10px; }
+.view-reset { pointer-events: auto; min-height: 44px; background: #080c1380; border: 1px solid #ffffff20; border-radius: 6px; color: #d4d9df; padding: 8px 14px; font-size: 10px; }
+@media (max-width: 760px) {
+  .topbar { padding: max(22px, env(safe-area-inset-top)) 6vw 0; }
+  .brand { font-size: 19px; }
+  .preview-badge { font-size: 7px; letter-spacing: 1px; }
+  .mission { margin: 42px 6vw 150px; width: 88vw; }
+  .eyebrow { font-size: 8px; margin-bottom: 18px; letter-spacing: 1.2px; }
+  h1 { font-size: clamp(43px, 11vw, 70px); letter-spacing: -2px; }
+  .intro { font-size: 12px; margin: 20px 0; max-width: 270px; }
+  .actions { gap: 8px; }
+  .actions button { min-height: 48px; padding: 13px 17px; font-size: 12px; }
+  .status { font-size: 10px; max-width: 260px; }
+  .telemetry { top: auto; right: auto; left: 6vw; bottom: 95px; gap: 26px; padding: 12px 14px; background: #080c13c9; border-radius: 7px; }
+  .telemetry strong { font-size: 10px; }
+  .vignette { background: linear-gradient(180deg, #080c13eb 0%, #080c13cc 35%, #080c1370 52%, transparent 68%, #080c13e8 100%); }
+  footer { padding-left: 6vw; padding-right: 6vw; font-size: 9px; align-items: end; }
+  footer p { max-width: 215px; line-height: 1.7; }
+  .divider { padding: 0 4px; }
+  .control-icon { display: none; }
+  .view-reset { font-size: 9px; white-space: nowrap; }
+}
+@media (max-height: 600px) and (min-width: 761px) {
+  .mission { margin-top: 36px; margin-bottom: 80px; }
+  h1 { font-size: 54px; }
+  .intro { margin: 18px 0; }
+  .telemetry { top: 100px; }
+}
+@media (max-height: 680px) and (max-width: 760px) {
+  .mission { margin-top: 25px; }
+  h1 { font-size: 43px; }
+  .intro { margin: 14px 0; }
+  .status { margin-top: 10px; }
+  .telemetry { bottom: 82px; }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none !important; } }
